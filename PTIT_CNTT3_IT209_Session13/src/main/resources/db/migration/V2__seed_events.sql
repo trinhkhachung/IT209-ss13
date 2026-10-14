@@ -1,0 +1,20 @@
+INSERT INTO events (id, title, category, description, location, starts_at, ends_at, capacity, registration_open)
+VALUES
+    ('11111111-1111-4111-8111-111111111111',
+     'Ngày hội câu lạc bộ sinh viên',
+     'Cộng đồng',
+     'Gặp gỡ các câu lạc bộ, khám phá hoạt động mới và kết nối bạn bè trong trường.',
+     'Sân trung tâm',
+     TIMESTAMP WITH TIME ZONE '2026-11-21 08:00:00+07:00',
+     TIMESTAMP WITH TIME ZONE '2026-11-21 16:00:00+07:00',
+     120,
+     TRUE),
+    ('22222222-2222-4222-8222-222222222222',
+     'Hackathon Sáng tạo Campus',
+     'Công nghệ',
+     'Cùng đội nhóm xây dựng ý tưởng và nguyên mẫu số trong một ngày sáng tạo.',
+     'Phòng hội thảo A2',
+     TIMESTAMP WITH TIME ZONE '2026-12-10 09:00:00+07:00',
+     TIMESTAMP WITH TIME ZONE '2026-12-10 18:00:00+07:00',
+     40,
+     TRUE);

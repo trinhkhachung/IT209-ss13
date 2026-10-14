@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: campus-hub-events
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/campus_hub}
+    username: ${DB_USERNAME:campus_hub}
+    password: ${DB_PASSWORD:campus_hub}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health

@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: campus-hub-events:local
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DB_URL: jdbc:postgresql://db:5432/campus_hub
+      DB_USERNAME: ${DB_USERNAME:-campus_hub}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env before starting Compose}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health/readiness >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      start_period: 45s
+      retries: 5
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: campus_hub
+      POSTGRES_USER: ${DB_USERNAME:-campus_hub}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env before starting Compose}
+    volumes:
+      - campus_hub_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d campus_hub"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  campus_hub_data:

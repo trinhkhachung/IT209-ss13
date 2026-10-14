@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.16'
+}
+
+group = 'vn.campushub'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
+    testImplementation platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'com.h2database:h2'
+}
+
+def npmExecutable = System.getProperty('os.name').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm'
+
+tasks.register('installFrontend', Exec) {
+    workingDir = layout.projectDirectory.dir('frontend').asFile
+    commandLine npmExecutable, 'ci'
+    inputs.files('frontend/package.json', 'frontend/package-lock.json')
+    outputs.file('frontend/node_modules/.package-lock.json')
+}
+
+tasks.register('buildFrontend', Exec) {
+    dependsOn tasks.named('installFrontend')
+    workingDir = layout.projectDirectory.dir('frontend').asFile
+    commandLine npmExecutable, 'run', 'build'
+    inputs.dir('frontend/src')
+    inputs.files('frontend/index.html', 'frontend/vite.config.ts', 'frontend/tsconfig.json')
+    outputs.dir('frontend/dist')
+}
+
+tasks.named('processResources') {
+    if (!project.hasProperty('skipFrontendBuild')) {
+        dependsOn tasks.named('buildFrontend')
+    }
+    from('frontend/dist') {
+        into 'static'
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

@@ -1,0 +1,60 @@
+services:
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE must reference an immutable GHCR tag}
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DB_URL: jdbc:postgresql://db:5432/campus_hub
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "80:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 384m
+    cpus: 1.0
+    networks:
+      - application
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health/readiness >/dev/null"]
+      interval: 20s
+      timeout: 5s
+      start_period: 50s
+      retries: 5
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=25", "-c", "work_mem=2MB"]
+    environment:
+      POSTGRES_DB: campus_hub
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - campus_hub_production_data:/var/lib/postgresql/data
+    mem_limit: 192m
+    cpus: 1.0
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d campus_hub"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  campus_hub_production_data:
+
+networks:
+  application:
+  database:
+    internal: true
